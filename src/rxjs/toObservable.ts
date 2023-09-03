@@ -12,7 +12,6 @@ import { effect } from '../effect';
 
 // TODO: Кажется необязательным. Можно убрать.
 export type ToObservableOptions = {
-  sync?: boolean;
   onlyChanges?: boolean;
 };
 
@@ -26,19 +25,16 @@ export function toObservable<T>(
   options?: ToObservableOptions,
 ): Observable<T> {
   const observable = new Observable<T>((subscriber) => {
-    const watcher = effect(
-      () => {
-        let value: T;
-        try {
-          value = source();
-        } catch (err) {
-          untracked(() => subscriber.error(err));
-          return;
-        }
-        untracked(() => subscriber.next(value));
-      },
-      { sync: options?.sync },
-    );
+    const watcher = effect(() => {
+      let value: T;
+      try {
+        value = source();
+      } catch (err) {
+        untracked(() => subscriber.error(err));
+        return;
+      }
+      untracked(() => subscriber.next(value));
+    });
 
     return () => watcher.destroy();
   });
